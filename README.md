@@ -1,4 +1,4 @@
-# CS-517---Semester-Project
+# CS-517-Semester-Project
 
 This program will take CPU temperature reading data and, for each core, generate a piecewise linear interpolation and a global linear least-squares approximation.
 
