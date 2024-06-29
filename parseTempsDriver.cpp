@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "parseTemps.h"
+#include "PiecewiseLinear.h"
 
 using namespace std;
 
@@ -28,54 +29,6 @@ int main(int argc, char** argv)
     // vector
     auto readings = parse_raw_temps<std::vector>(input_temps);
 
-    // list
-    // auto readings = parse_raw_temps<std::list<CoreTempReading>>(input_temps);
-
-    //--------------------------------------------------------------------------
-    // Output everything to match the Python version
-    //--------------------------------------------------------------------------
-    for (const CoreTempReading& theReading : readings) {
-        cout << "(" << theReading.first << ", [";
-
-        const vector<double>& coreTemps = theReading.second;
-        for (int i = 0; i < coreTemps.size() - 1; i++) {
-            cout << coreTemps[i] << ", ";
-        }
-        cout << *(coreTemps.end() - 1) << "])" << "\n";
-    }
-
-    //--------------------------------------------------------------------------
-    // Split into separate vectors
-    //--------------------------------------------------------------------------
-    /*
-    std::vector<double> times = {};
-    std::vector<double> readingsCore0 = {};
-    std::vector<double> readingsCore1 = {};
-    std::vector<double> readingsCore2 = {};
-    std::vector<double> readingsCore3 = {};
-    for (const CoreTempReading& theReading : readings) {
-        // Split the reading into time and temperatures
-        const double time = theReading.first;
-        const std::vector<double>& coreReadings = theReading.second;
-
-        times.push_back(time);
-        readingsCore0.push_back(coreReadings[0]);
-        readingsCore1.push_back(coreReadings[1]);
-        readingsCore2.push_back(coreReadings[2]);
-        readingsCore3.push_back(coreReadings[3]);
-    }
-
-    // Output the data (in the same format as before)
-    const int numReadings = times.size();
-    for (int i = 0; i < numReadings; ++i) {
-        cout << "(" << times[i] << ", [";
-        cout << readingsCore0[i] << ", ";
-        cout << readingsCore1[i] << ", ";
-        cout << readingsCore2[i] << ", ";
-        cout << readingsCore3[i] << "])" << "\n";
-    }
-    */
-
     //--------------------------------------------------------------------------
     // Split into separate vectors, but set up a 2D vector for core temperatures
     //--------------------------------------------------------------------------
@@ -94,16 +47,37 @@ int main(int argc, char** argv)
         }
     }
 
-    // Output the data (in the same format as before)
+    //------------------------------------------------------------------------
+    // Create Piecewise Linear Interpolation lines for each core and time
+    // interval & output the data.
+    // TODO: Add Global Least Squares approx. for each core
+    //------------------------------------------------------------------------
     const int numReadings = times.size();
-    for (int i = 0; i < numReadings; ++i) {
-        cout << "(" << times[i] << ", [";
+    const int lastCoreIdx = allCoreTemperatures.size() - 1;
 
-        const int lastCoreIdx = allCoreTemperatures.size() - 1;
-        for (int coreIdx = 0; coreIdx < lastCoreIdx; ++coreIdx) {
-            cout << allCoreTemperatures[coreIdx][i] << ", ";
+    std::vector<SlopeIntercept> results;
+
+    for (int coreIdx = 0; coreIdx <= lastCoreIdx; ++coreIdx)
+    {
+        string outfilename = "output-core-";
+        outfilename += (coreIdx+48);
+
+        ofstream outfile(outfilename);
+
+        for (int i = 0; i < (numReadings - 1); ++i)
+        {
+            SingleCoreReading point1 = {times[i], allCoreTemperatures[coreIdx][i]};
+            SingleCoreReading point2 = {times[i + 1], allCoreTemperatures[coreIdx][i + 1]};
+
+            SlopeIntercept line = makeLine(point1, point2);
+
+            outfile << right << fixed << setprecision(4)
+            << setw(6) << point1.first << " <= x <= " << setw(6) << point2.first << " ; "
+            << "y = " << setw(8) << line.first << " + " << setw(8) << line.second << "x ; interpolation"
+            << std::endl;
         }
-        cout << allCoreTemperatures[lastCoreIdx][i] << "])" << "\n";
+
+        outfile.close();
     }
 
     return 0;
