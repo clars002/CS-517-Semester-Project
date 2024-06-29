@@ -38,3 +38,5 @@ For now, it is assumed that all recordings are evenly spaced by 30 second interv
 
 
 More information about the project and its goals can be found at: https://www.cs.odu.edu/~tkennedy/cs417/latest/Assts/project-cpu-temps/index.html
+
+This project has a GitHub repository at: https://github.com/clars002/CS-517-Semester-Project
