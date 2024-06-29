@@ -20,10 +20,12 @@ Either use the provided, pre-compiled parseTemps file, or run make clean
 Execute the parseTemps file (e.g. with ./parseTemps from the root directory),
 with a path to the file containing input data as an argument. For example:
 > ./parseTemps input/sample-input.txt
+
 will execute the program on the sample-input.txt file within the input folder.
 
 Output will be written to a series of files following the naming convention:
 > output-core-[core number]
+
 where [core number] is the index of one of the cores represented in the input.
 
 
